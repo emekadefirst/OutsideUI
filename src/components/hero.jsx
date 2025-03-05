@@ -18,12 +18,8 @@ const Hero = () => {
         {/* Buttons */}
         <div className="flex flex-col md:flex-row gap-4">
           <button className="bg-white text-black px-8 py-4 rounded-full text-lg font-semibold hover:scale-105 transition-transform inline-flex items-center justify-center">
-            Get Early Access
+            Explore 
             <ArrowRight className="w-5 h-5 ml-2" />
-          </button>
-
-          <button className="bg-white/10 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/20 transition-colors flex items-center">
-            <Play className="w-5 h-5 mr-2" /> Watch Demo
           </button>
         </div>
       </div>

@@ -29,7 +29,7 @@ const Action = () => {
               type="submit"
               className="w-full bg-white text-black px-6 py-4 rounded-full font-semibold hover:scale-105 transition-transform"
             >
-              Get Priority Access
+              Subcribe
             </button>
           </form>
         </div>
