@@ -6,12 +6,11 @@ import Hero from "../components/hero";
 
 const HomePage = () => {
   return (
-    <div
-      style={{ backgroundImage: `url(${bgImage})` }}
-      className="bg-cover bg-center h-screen"
-    >
-      <NavBar />
-      <Hero />
+    <div style={{ backgroundImage: `url(${bgImage})` }}className="bg-cover bg-center h-screen">
+      <NavBar className="mt-0 mb-8" />
+
+        <Hero />
+
       <Footer />
     </div>
   );
