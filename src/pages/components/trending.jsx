@@ -1,5 +1,5 @@
 import React from "react";
-import eventImage from "../assets/images/lungu-boy.jpg"; // Ensure the correct path
+import eventImage from "/src/assets/images/lungu-boy.jpg"; 
 
 const TrendingComponent = () => {
   return (
@@ -10,7 +10,7 @@ const TrendingComponent = () => {
             Trending This Week
           </h2>
           <a
-            href="events.html"
+            href="/tickets"
             className="text-white/70 hover:text-white text-sm font-medium"
           >
             View All
