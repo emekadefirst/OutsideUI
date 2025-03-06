@@ -4,7 +4,7 @@ const Action = () => {
   return (
     <section className="py-20 relative overflow-hidden" id="beta">
       {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600"></div>
+      <div className="absolute inset-0 bg-black"></div>
       <div className="absolute inset-0 noise-bg"></div>
 
       {/* Content */}

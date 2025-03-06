@@ -18,7 +18,7 @@ const Hero = () => {
         {/* Buttons */}
         <div className="flex flex-col md:flex-row gap-4">
           <button className="bg-white text-black px-8 py-4 rounded-full text-lg font-semibold hover:scale-105 transition-transform inline-flex items-center justify-center">
-            Explore 
+            Explore
             <ArrowRight className="w-5 h-5 ml-2" />
           </button>
         </div>

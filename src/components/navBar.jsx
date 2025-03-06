@@ -65,7 +65,7 @@ const NavBar = () => {
 
       {/* Mobile Menu Overlay */}
       <div
-        className={`fixed inset-0 bg-black/95 z-50 md:hidden flex flex-col items-center justify-center 
+        className={`fixed inset-0 bg-black/85 z-50 md:hidden flex flex-col items-center justify-center 
                     transition-opacity duration-300 ${
                       mobileMenuOpen
                         ? "opacity-100"
