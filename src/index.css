@@ -1,3 +1,6 @@
 @import "tailwindcss";
 
 
+.hero-bg {
+    background: linear-gradient( to right, #000000fa, #000000d8), url('./assets/images/image.jpg');
+}

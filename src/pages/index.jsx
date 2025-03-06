@@ -8,9 +8,7 @@ import Action from "../components/action";
 const HomePage = () => {
   return (
     <div
-      className="relative h-screen bg-cover bg-center"
-      style={{ backgroundImage: `url(${bgImage})` }}
-    >
+      className="relative h-screen bg-cover bg-center bg-black hero-bg"    >
       {/* Dark Overlay with Low Opacity */}
       <div className="absolute inset-0 bg-black-10 bg-opacity-100"></div>
 
