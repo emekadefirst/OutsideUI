@@ -1,9 +1,9 @@
 import React from "react";
-import NavBar from "../components/navBar"
-import Footer from "../components/footer";
-import Hero from "../components/hero";
-import Action from "../components/action";
-import TrendingComponent from "../components/trending";
+import NavBar from "../../components/public/navBar"
+import Footer from "../../components/public/footer";
+import Hero from "../../components/public/hero";
+import Action from "../../components/public/action";
+import TrendingComponent from "../../components/public/trending";
 
 const HomePage = () => {
   return (

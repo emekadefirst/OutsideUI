@@ -1,7 +1,7 @@
 import React from "react";
-import NavBar from "../components/navBar";
-import Footer from "../components/footer";
-import TicketsComponent from "../components/tickets"
+import NavBar from "../../components/public/navBar";
+import Footer from "../../components/public/footer";
+import TicketsComponent from "../../components/public/tickets"
 
 
 const Tickets = () => {

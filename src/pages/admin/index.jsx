@@ -1,20 +1,43 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, User, Shield, ArrowRight } from 'lucide-react';
+import React, { useState } from "react";
+import { Eye, EyeOff, Lock, User, Shield, ArrowRight } from "lucide-react";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";   // ✅ fix
+import { login, getUser } from "../../services/auth";
+
+
+
+
 const AdminLogin = () => {
- const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate login process
-    setTimeout(() => {
+
+    try {
+      const data = await login({ email, password });
+
+      if (data) {
+        const user = await getUser();
+        console.log(user)
+        if (user.is_superuser) {
+          navigate("/admin/site/dashboard");
+        } else {
+          toast.error("You don't have permission to access this page");
+        }
+      }
+    } catch (err) {
+      toast.error("Login failed");
+    } finally {
       setIsLoading(false);
-      alert('Login successful! (This is a demo)');
-    }, 2000);
+    }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{
