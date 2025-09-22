@@ -30,7 +30,7 @@ const NavBar = () => {
           {/* Logo */}
           <div className="text-white text-3xl font-extrabold tracking-tighter select-none">
             <a href="/">
-              <img src={Logo} className="h-20 w-20 object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-300" alt="" />
+              <img src={Logo} className="h-15 w-15 object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-300" alt="" />
             </a>
           </div>
 
