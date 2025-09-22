@@ -15,6 +15,7 @@ import {
   ChevronRight,
   LogOut
 } from "lucide-react";
+import { logoutUser } from "../../services/auth";
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
@@ -55,9 +56,8 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 border-r border-white/10 shadow-2xl z-50 transition-all duration-300 ease-in-out ${
-          isOpen ? "w-64" : "w-0 md:w-16"
-        } overflow-hidden`}
+        className={`fixed top-0 left-0 h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 border-r border-white/10 shadow-2xl z-50 transition-all duration-300 ease-in-out ${isOpen ? "w-64" : "w-0 md:w-16"
+          } overflow-hidden`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -89,30 +89,46 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
                 onClick={() => handleMenuClick(item.path)}
                 onMouseEnter={() => setHoveredItem(item.id)}
                 onMouseLeave={() => setHoveredItem(null)}
-                className={`w-full flex items-center p-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${
-                  isActive
+                className={`w-full flex items-center p-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${isActive
                     ? "bg-gradient-to-r from-white/20 to-white/10 text-white shadow-lg border border-white/20"
                     : "text-gray-300 hover:text-white hover:bg-white/10"
-                }`}
+                  }`}
               >
-                {(isActive || isHovered) && (
+                {/* Only show overlay when sidebar is open */}
+                {isOpen && (isActive || isHovered) && (
                   <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-10 rounded-xl`} />
                 )}
 
-                <div className={`relative z-10 flex-shrink-0 ${isActive ? `text-white` : 'text-gray-400 group-hover:text-white'}`}>
-                  <Icon className="w-5 h-5" />
+                {/* Enhanced icon styling for better visibility when closed */}
+                <div className={`relative z-10 flex-shrink-0 transition-all duration-300 ${isActive
+                    ? 'text-white scale-110'
+                    : isOpen
+                      ? 'text-gray-400 group-hover:text-white group-hover:scale-105'
+                      : 'text-gray-200 group-hover:text-white group-hover:scale-110'
+                  }`}>
+                  {/* Brighter background for closed state when active */}
+                  {!isOpen && isActive && (
+                    <div className="absolute inset-0 bg-white/20 rounded-lg -m-1" />
+                  )}
+                  {/* Subtle glow effect for closed state when hovered */}
+                  {!isOpen && isHovered && (
+                    <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-20 rounded-lg -m-1`} />
+                  )}
+                  <Icon className="w-5 h-5 relative z-10" />
                 </div>
 
                 {isOpen && <span className="ml-3 font-medium truncate relative z-10">{item.label}</span>}
 
-                {isActive && (
+                {isActive && isOpen && (
                   <div className="ml-auto relative z-10">
                     <ChevronRight className="w-4 h-4" />
                   </div>
                 )}
 
+                {/* Enhanced tooltip for collapsed state */}
                 {!isOpen && (
-                  <div className="absolute left-16 bg-gray-800 text-white px-2 py-1 rounded-md text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border border-white/10">
+                  <div className="absolute left-16 bg-gray-800/95 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap z-50 border border-white/20 shadow-xl">
+                    <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45 border-l border-t border-white/20"></div>
                     {item.label}
                   </div>
                 )}
@@ -134,27 +150,37 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
                 onClick={() => handleMenuClick(item.path)}
                 onMouseEnter={() => setHoveredItem(item.id)}
                 onMouseLeave={() => setHoveredItem(null)}
-                className={`w-full flex items-center p-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${
-                  isActive
+                className={`w-full flex items-center p-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${isActive
                     ? "bg-gradient-to-r from-white/20 to-white/10 text-white shadow-lg border border-white/20"
                     : "text-gray-300 hover:text-white hover:bg-white/10"
-                }`}
+                  }`}
               >
-                {(isActive || isHovered) && (
+                {/* Only show overlay when sidebar is open */}
+                {isOpen && (isActive || isHovered) && (
                   <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-10 rounded-xl`} />
                 )}
 
-                <div className={`relative z-10 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
-                  <Icon className="w-5 h-5" />
+                {/* Enhanced icon styling for better visibility when closed */}
+                <div className={`relative z-10 flex-shrink-0 transition-all duration-300 ${isActive
+                    ? 'text-white scale-110'
+                    : isOpen
+                      ? 'text-gray-400 group-hover:text-white group-hover:scale-105'
+                      : 'text-gray-200 group-hover:text-white group-hover:scale-110'
+                  }`}>
+                  {/* Brighter background for closed state when active */}
+                  {!isOpen && isActive && (
+                    <div className="absolute inset-0 bg-white/20 rounded-lg -m-1" />
+                  )}
+                  {/* Subtle glow effect for closed state when hovered */}
+                  {!isOpen && isHovered && (
+                    <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-20 rounded-lg -m-1`} />
+                  )}
+                  <Icon className="w-5 h-5 relative z-10" />
                 </div>
 
                 {isOpen && <span className="ml-3 font-medium truncate relative z-10">{item.label}</span>}
 
-                {!isOpen && (
-                  <div className="absolute left-16 bg-gray-800 text-white px-2 py-1 rounded-md text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border border-white/10">
-                    {item.label}
-                  </div>
-                )}
+
               </button>
             );
           })}
@@ -162,29 +188,40 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
           {/* Logout button */}
           <button
             onClick={() => {
-              localStorage.removeItem("token");
-              navigate("/admin/login");
+              logoutUser(); 
             }}
             onMouseEnter={() => setHoveredItem("logout")}
             onMouseLeave={() => setHoveredItem(null)}
             className="w-full flex items-center p-3 rounded-xl transition-all duration-300 group relative overflow-hidden text-red-400 hover:text-red-300 hover:bg-red-500/10"
           >
-            {hoveredItem === "logout" && (
+            {/* Only show overlay when sidebar is open */}
+            {isOpen && hoveredItem === "logout" && (
               <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10 rounded-xl" />
             )}
 
-            <div className="relative z-10 flex-shrink-0">
-              <LogOut className="w-5 h-5" />
+            {/* Enhanced icon styling for better visibility when closed */}
+            <div className={`relative z-10 flex-shrink-0 transition-all duration-300 ${isOpen
+                ? 'text-red-400 group-hover:text-red-300 group-hover:scale-105'
+                : 'text-red-300 group-hover:text-red-200 group-hover:scale-110'
+              }`}>
+              {/* Brighter background for closed state when hovered */}
+              {!isOpen && hoveredItem === "logout" && (
+                <div className="absolute inset-0 bg-red-500/20 rounded-lg -m-1" />
+              )}
+              <LogOut className="w-5 h-5 relative z-10" />
             </div>
 
             {isOpen && <span className="ml-3 font-medium truncate relative z-10">Logout</span>}
 
+            {/* Enhanced tooltip for collapsed state */}
             {!isOpen && (
-              <div className="absolute left-16 bg-gray-800 text-white px-2 py-1 rounded-md text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border border-white/10">
+              <div className="absolute left-16 bg-red-800/95 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap z-50 border border-red-500/30 shadow-xl">
+                <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-red-800 rotate-45 border-l border-t border-red-500/30"></div>
                 Logout
               </div>
             )}
           </button>
+
         </div>
 
         {/* Desktop toggle button */}

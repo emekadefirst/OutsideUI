@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import Logo from "../../assets/images/logo.png"
 
 const NavBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,11 +25,11 @@ const NavBar = () => {
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/80 to-transparent">
-      <div className="container mx-auto px-6 py-4">
+      <div className="container mt-1 mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="text-white text-3xl font-extrabold tracking-tighter select-none">
-            OUTSIDE
+            <img src={Logo} className="h-20 w-20 object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-300" alt="" />
           </div>
 
           {/* Mobile Menu Toggle */}

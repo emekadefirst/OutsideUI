@@ -1,5 +1,6 @@
 import apiCall from "./config";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";  
 
 export async function getUser() {
   try {
@@ -27,4 +28,10 @@ export async function login(data) {
     toast.error("Login error");
     throw err;
   }
+}
+
+
+export function logoutUser() {
+  localStorage.clear();
+  window.location.href = "/admin"; 
 }
