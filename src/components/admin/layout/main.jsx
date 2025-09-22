@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import AdminNavBar from "../adminNav";
-import AdminSidebar from "../sidebar";
+import AdminNavBar from "../adminNav.jsx";
+import AdminSidebar from "../sidebar.jsx";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false); // for mobile toggle
