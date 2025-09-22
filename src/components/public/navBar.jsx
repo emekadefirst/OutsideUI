@@ -29,7 +29,9 @@ const NavBar = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="text-white text-3xl font-extrabold tracking-tighter select-none">
-            <img src={Logo} className="h-20 w-20 object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-300" alt="" />
+            <a href="/">
+              <img src={Logo} className="h-20 w-20 object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-300" alt="" />
+            </a>
           </div>
 
           {/* Mobile Menu Toggle */}
