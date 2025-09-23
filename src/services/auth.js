@@ -15,6 +15,7 @@ export async function getUser() {
 export async function login(data) {
   try {
     const response = await apiCall("users/login", "POST", data);
+    console.log(response.data)
 
     if (response.status === 200) {
       localStorage.setItem("access_token", response.data.access_token);
