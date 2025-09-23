@@ -6,31 +6,11 @@ import ErrorState from "../ui/error-state";
 import EmptyState from "../ui/empty-state";
 import EventsHeader from "../ui/events-header";
 
+// Custom hook
+import { useEvents } from "../../hooks/useEvents";
+
 const TicketsComponent = () => {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
-
-  const fetchTickets = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const { events, userLocation } = await fetchAndEnhanceEvents();
-      setTickets(events);
-      setUserLocation(userLocation);
-    } catch (error) {
-      setError(error.message);
-      console.error("Fetch error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+  const { tickets, loading, error, userLocation, refetch } = useEvents();
 
   return (
     <section className="py-20 bg-gradient-to-br from-slate-900 via-black to-slate-900">
@@ -44,17 +24,14 @@ const TicketsComponent = () => {
 
         {loading && <LoadingState />}
         
-        {error && <ErrorState onRetry={fetchTickets} />}
+        {error && <ErrorState onRetry={refetch} />}
         
         {!loading && !error && (
           <>
             {tickets.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {tickets.map((ticket) => (
-                  <TicketCard
-                    key={ticket.id}
-                    ticket={ticket}
-                  />
+                  <TicketCard key={ticket.id} ticket={ticket} />
                 ))}
               </div>
             ) : (
