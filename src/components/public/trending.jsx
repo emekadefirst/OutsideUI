@@ -1,5 +1,6 @@
 import React from "react";
 import eventImage from "/src/assets/images/lungu-boy.jpg"; 
+import { MapPin } from "lucide-react";
 
 const TrendingComponent = () => {
   return (
@@ -33,6 +34,10 @@ const TrendingComponent = () => {
               </h3>
               <p className="text-white/70 text-sm">
                 Downtown Underground • 1.2k going
+              </p>
+              <p className="text-white/70 text-sm flex items-center gap-1">
+                <MapPin className="w-4 h-4" />
+                <span>Lagos, Nigeria, 15mins away</span>
               </p>
             </div>
           </div>
