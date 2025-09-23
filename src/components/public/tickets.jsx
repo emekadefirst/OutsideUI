@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AllEvent } from "../../services/events";
+import { MapPin } from "lucide-react";
 
 const TicketsComponent = () => {
   const [tickets, setTickets] = useState([]);
@@ -162,7 +163,7 @@ const TicketsComponent = () => {
               </p>
               {userLocation && (
                 <p className="text-orange-400 text-xs mt-1">
-                  📍 Location-based results
+                  <MapPin /> Location-based results
                 </p>
               )}
             </div>
@@ -260,8 +261,11 @@ const TicketCard = ({ ticket, formatDistance }) => {
           {/* Distance overlay */}
           {ticket.distance && (
             <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2">
-              <p className="text-white text-xs font-medium">
-                📍 {formatDistance(ticket.distance)}
+              <p className="text-white text-xs font-medium flex gap-x-2 items-center">
+                <MapPin className="w-4 h-" />
+                <span>
+                  {formatDistance(ticket.distance)}
+                </span>
               </p>
             </div>
           )}
