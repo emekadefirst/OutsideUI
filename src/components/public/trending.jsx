@@ -2,6 +2,7 @@ import React from "react";
 import eventImage from "/src/assets/images/lungu-boy.jpg"; 
 import { MapPin } from "lucide-react";
 
+
 const TrendingComponent = () => {
   return (
     <section className="py-20 bg-black relative">
