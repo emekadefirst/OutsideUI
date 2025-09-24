@@ -6,10 +6,9 @@ import ErrorState from "../ui/error-state";
 import EmptyState from "../ui/empty-state";
 import EventsHeader from "../ui/events-header";
 
-// Custom hook
 import { useEvents } from "../../hooks/useEvents";
 
-const TicketsComponent = () => {
+const EventsComponent = () => {
   const { tickets, loading, error, userLocation, refetch } = useEvents();
 
   return (
@@ -44,4 +43,4 @@ const TicketsComponent = () => {
   );
 };
 
-export default TicketsComponent;
+export default EventsComponent;

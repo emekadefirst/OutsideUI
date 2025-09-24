@@ -10,7 +10,7 @@ import { ToastContainer } from "react-toastify";
 // Pages & Components
 import AdminLayout from "./components/admin/layout/main";
 import HomePage from "./pages/public/index";
-import Tickets from "./pages/public/Allticket";
+import EventsComponent from "./pages/public/Allevents";
 import AdminLogin from "./pages/admin";
 import AdminDashboard from "./pages/admin/dashboard";
 import UserList from "./pages/admin/user/allusers";
@@ -25,7 +25,7 @@ createRoot(document.getElementById("root")).render(
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/tickets" element={<Tickets />} />
+        <Route path="/events" element={<EventsComponent />} />
 
         {/* Admin login (standalone page) */}
         <Route path="/admin" element={<AdminLogin />} />

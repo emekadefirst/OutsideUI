@@ -111,7 +111,7 @@ const TicketCard = memo(({ ticket }) => {
               className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-4 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
               aria-label={`Get tickets for ${ticket.title}`}
             >
-              Get Tickets
+              Cop Tickets
             </button>
           </div>
         </div>
