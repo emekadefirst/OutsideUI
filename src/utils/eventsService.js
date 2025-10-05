@@ -13,7 +13,7 @@ export const fetchAndEnhanceEvents = async () => {
     
     // Fetch events from API
     const response = await AllEvent();
-    const data = response.data;
+    const data = response;
     
     if (!data || !Array.isArray(data) || data.length === 0) {
       throw new Error("No events found");

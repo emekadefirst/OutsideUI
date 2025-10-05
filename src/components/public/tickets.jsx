@@ -12,7 +12,7 @@ const EventsComponent = () => {
   const { tickets, loading, error, userLocation, refetch } = useEvents();
 
   return (
-    <section className="py-20 bg-gradient-to-br from-slate-900 via-black to-slate-900">
+    <section className="py-20 from-slate-900 via-black to-slate-900">
       <div className="container mx-auto px-4">
         <EventsHeader 
           eventsCount={tickets.length}

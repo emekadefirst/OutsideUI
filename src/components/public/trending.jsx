@@ -18,7 +18,7 @@ const TrendingComponent = () => {
       
       // Fetch all events
       const response = await AllEvent();
-      const data = response.data;
+      const data = response;
 
       if (data && Array.isArray(data) && data.length > 0) {
         // Take first 3 events and enhance with location/formatting

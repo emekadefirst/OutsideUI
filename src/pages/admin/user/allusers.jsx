@@ -86,7 +86,7 @@ const UserList = () => {
   const totalPages = Math.ceil(sortedUsers.length / usersPerPage);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 m-4">
       {/* Loading and Error States */}
       {loading && <p className="text-gray-400">Loading users...</p>}
       {error && <p className="text-red-500">{error}</p>}
@@ -94,7 +94,7 @@ const UserList = () => {
       {!loading && !error && (
         <>
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row  md:items-center m-4 justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white">User Management</h1>
               <p className="text-gray-400">

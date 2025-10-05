@@ -17,12 +17,12 @@ const AdminNavBar = ({ sidebarOpen, setSidebarOpen, activeMenu }) => {
           </button>
 
           <div>
-            <h1 className="text-white text-xl font-semibold capitalize">
+            {/* <h1 className="text-white text-xl font-semibold capitalize">
               {activeMenu === "home"
                 ? "Dashboard"
                 : activeMenu?.replace("-", " ")}
-            </h1>
-            <p className="text-gray-400 text-sm">
+            </h1> */}
+            <p className="p-4 text-gray-400 text-sm">
               {currentTime.toLocaleDateString("en-US", {
                 weekday: "long",
                 year: "numeric",
