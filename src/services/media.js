@@ -4,10 +4,10 @@ export default async function UploadFile(file) {
   if (!file) return null;
 
   const formData = new FormData();
-  formData.append("files", file); // single file
+  formData.append("file", file); // single file
 
   try {
-    const response = await fetch(`${API}/v1/files/`, {
+    const response = await fetch(`${API}/files/`, {
       method: "POST",
       body: formData,
     });

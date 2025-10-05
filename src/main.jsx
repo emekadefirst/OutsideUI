@@ -11,6 +11,7 @@ import AdminDashboard from "./pages/admin/dashboard";
 import UserList from "./pages/admin/user/allusers";
 import AddEvent from "./pages/admin/event/create";
 import EventList from "./pages/admin/event/allevents";
+import AboutPage from "./pages/public/about";
 
 // Layouts
 import AdminLayout from "./components/admin/layout/main";
@@ -28,7 +29,8 @@ createRoot(document.getElementById("root")).render(
         {/* 🌍 Public Layout Wrapper */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/events" element={<EventsComponent />} />
+          <Route path="/discover" element={<EventsComponent />} />
+          <Route path="/about" element={<AboutPage />} />
         </Route>
 
         {/* 🔐 Admin login (standalone) */}

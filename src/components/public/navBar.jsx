@@ -18,7 +18,7 @@ const NavBar = () => {
   };
 
   const NavLinks = [
-    { name: "DISCOVER", href: "/tickets" },
+    { name: "DISCOVER", href: "/discover" },
     { name: "ABOUT", href: "/about" },
     { name: "HOSTS", href: "/hosts" },
   ];

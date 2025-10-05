@@ -49,8 +49,8 @@ const AddEvent = () => {
 
     try {
       const result = await UploadFile(file);
-      if (result && result._id) {
-        setBannerId(result._id);
+      if (result && result.id) {
+        setBannerId(result.id);
       }
     } catch (error) {
       console.error("Error uploading banner:", error);
@@ -73,8 +73,9 @@ const AddEvent = () => {
       for (const file of files) {
         try {
           const result = await UploadFile(file);
-          if (result && result._id) {
-            uploadedIds.push(result._id);
+          if (result && result.id) {
+            uploadedIds.push(result.id);
+            console.log("Uploaded gallery file ID:", result.id); // Log each uploaded file ID
           }
         } catch (error) {
           console.error("Error uploading gallery file:", error);
@@ -111,10 +112,10 @@ const AddEvent = () => {
 
       // Prepare event data
       const eventData = {
-        host_id: user.id, // Corrected to user.id
+        host_id: user.id, 
         title: formData.title,
         description: formData.description,
-        time: formData.time,
+        time: formData.time, // Changed from [formData.time] to formData.time
         banner_id: bannerId,
         gallery: galleryIds,
         latitude: parseFloat(formData.latitude) || 0,
@@ -123,7 +124,8 @@ const AddEvent = () => {
       };
 
       // Create event
-      await CreateEvent(eventData);
+      const response = await CreateEvent(eventData);
+      console.log('Response:', response); // Add this for debugging
 
       // Reset form after successful submission
       setFormData({

@@ -103,7 +103,7 @@ const TrendingComponent = () => {
             </div>
           </div>
           <a
-            href="/events"
+            href="/discover"
             className="group flex items-center gap-2 text-white/70 hover:text-white text-sm font-medium transition-all duration-300 hover:scale-105"
           >
             <span>View All</span>

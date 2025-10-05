@@ -6,7 +6,7 @@ import TicketsComponent from "../../components/public/tickets"
 
 const Tickets = () => {
   return (
-    <div className="rrelative h-screen bg-cover bg-center bg-black hero-bg">
+    <div className="relative h-screen bg-cover bg-center bg-black hero-bg">
       {/* Dark Overlay with Low Opacity */}
       <div className="absolute inset-0 bg-black-10 bg-opacity-100"></div>
 
@@ -18,3 +18,5 @@ const Tickets = () => {
 };
 
 export default Tickets;
+
+
