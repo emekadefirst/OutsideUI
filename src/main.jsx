@@ -5,7 +5,7 @@ import { ToastContainer } from "react-toastify";
 
 // Pages & Components
 import HomePage from "./pages/public/index";
-import EventsComponent from "./pages/public/Allevents";
+import Tickets from "./pages/public/Allevents";
 import AdminLogin from "./pages/admin";
 import AdminDashboard from "./pages/admin/dashboard";
 import UserList from "./pages/admin/user/allusers";
@@ -29,7 +29,7 @@ createRoot(document.getElementById("root")).render(
         {/* 🌍 Public Layout Wrapper */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/discover" element={<EventsComponent />} />
+          <Route path="/discover" element={<Tickets />} />
           <Route path="/about" element={<AboutPage />} />
         </Route>
 

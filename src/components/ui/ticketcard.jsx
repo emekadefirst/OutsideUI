@@ -1,26 +1,53 @@
-import React, { useState, memo } from "react";
-import { MapPin } from "lucide-react";
-import { formatDistance } from "../../utils/locationUtils";
+import React, { useState, memo, useMemo, useCallback } from "react";
 
 const TicketCard = memo(({ ticket }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Memoize expensive calculations
+  const hostInitial = useMemo(() => {
+    return ticket.host?.name?.charAt(0).toUpperCase() || '?';
+  }, [ticket.host?.name]);
+
+  // Memoize event handlers
+  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+  const handleImageLoad = useCallback(() => setImageLoaded(true), []);
+
+  // Memoize dynamic classes to prevent recalculation on every render
+  const cardClasses = useMemo(() => 
+    `group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 transition-all duration-500 hover:border-orange-500/30 ${
+      isHovered ? "shadow-2xl shadow-orange-500/10 translate-y-[-8px] scale-[1.02]" : "shadow-lg"
+    }`,
+    [isHovered]
+  );
 
   return (
     <div
-      className={`group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 transition-all duration-500 hover:border-orange-500/30 ${
-        isHovered ? "shadow-2xl shadow-orange-500/10 translate-y-[-8px] scale-[1.02]" : "shadow-lg"
-      }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={cardClasses}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div className="flex flex-col md:flex-row h-full">
         <div className="md:w-2/5 relative overflow-hidden">
-          <img
-            src={ticket.banner}
-            alt={ticket.title}
-            className="w-full h-64 md:h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            loading="lazy"
-          />
+          {/* Optimized image loading */}
+          <div className="relative w-full h-64 md:h-full bg-gray-800/50">
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin"></div>
+              </div>
+            )}
+            <img
+              src={ticket.banner}
+              alt={ticket.title}
+              className={`w-full h-64 md:h-full object-cover transition-transform duration-700 group-hover:scale-110 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              loading="lazy"
+              onLoad={handleImageLoad}
+            />
+          </div>
+          
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
           
           {/* Date overlay */}
@@ -29,18 +56,6 @@ const TicketCard = memo(({ ticket }) => {
               {ticket.formattedDate}
             </p>
           </div>
-
-          {/* Distance overlay */}
-          {ticket.distance && (
-            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2">
-              <p className="text-white text-xs font-medium flex gap-x-2 items-center">
-                <MapPin className="w-4 h-4" />
-                <span>
-                  {formatDistance(ticket.distance)}
-                </span>
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Content Section */}
@@ -55,17 +70,6 @@ const TicketCard = memo(({ ticket }) => {
                 <span className="text-sm font-medium">
                   {ticket.formattedTime}
                   {ticket.endTime && ` - ${ticket.endTime}`}
-                </span>
-              </div>
-              
-              <span className="w-1 h-1 rounded-full bg-white/40"></span>
-              
-              <div className="flex items-center gap-2 text-white/70">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium">
-                  {ticket.address}
                 </span>
               </div>
             </div>
@@ -84,7 +88,7 @@ const TicketCard = memo(({ ticket }) => {
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold text-sm">
-                  {ticket.host?.name?.charAt(0).toUpperCase() || '?'}
+                  {hostInitial}
                 </span>
               </div>
               <div>
