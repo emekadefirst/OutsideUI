@@ -17,7 +17,6 @@ const TrendingComponent = () => {
       const data = response;
 
       if (data && Array.isArray(data) && data.length > 0) {
-        // Take first 3 events and enhance with formatting
         const firstThreeEvents = data.slice(0, 3).map(event => {
           const dateTime = formatDateTime(event.time);
           

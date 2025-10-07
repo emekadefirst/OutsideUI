@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { FileText, MapPin, Image, Ticket, Loader2, Check, X, Plus } from "lucide-react";
 import UploadFile from "../../../services/media";
 import { getUser } from "../../../services/auth";
 import { CreateEvent } from "../../../services/events";
+import { CreateTickets } from "../../../services/tickets";
 
 const AddEvent = () => {
-  const [activeTab, setActiveTab] = useState("event");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -15,7 +16,12 @@ const AddEvent = () => {
   });
   
   const [tickets, setTickets] = useState([]);
-  const [currentTicket, setCurrentTicket] = useState({ name: "", amount: "" });
+  const [currentTicket, setCurrentTicket] = useState({ 
+    name: "", 
+    cost: "",
+    quantity: "",
+    currency: "NGN"
+  });
   
   const [bannerFile, setBannerFile] = useState(null);
   const [bannerId, setBannerId] = useState(null);
@@ -174,9 +180,9 @@ const AddEvent = () => {
   };
 
   const addTicket = () => {
-    if (currentTicket.name && currentTicket.amount) {
+    if (currentTicket.name && currentTicket.cost) {
       setTickets([...tickets, { ...currentTicket }]);
-      setCurrentTicket({ name: "", amount: "" });
+      setCurrentTicket({ name: "", cost: "", quantity: "", currency: "NGN" });
     }
   };
 
@@ -208,8 +214,31 @@ const AddEvent = () => {
         address: formData.address
       };
 
-      const response = await CreateEvent(eventData);
-      console.log('Response:', response);
+      const eventResponse = await CreateEvent(eventData);
+      console.log('Event created:', eventResponse);
+
+      if (tickets.length > 0 && eventResponse && eventResponse.id) {
+        const ticketData = {
+          event_id: eventResponse.id,
+          tickets: tickets.map(ticket => ({
+            name: ticket.name,
+            cost: parseFloat(ticket.cost),
+            quantity: parseInt(ticket.quantity) || 0,
+            currency: ticket.currency || "NGN"
+          }))
+        };
+
+        try {
+          const ticketResponse = await CreateTickets(ticketData);
+          console.log('Tickets created:', ticketResponse);
+          alert('Event and tickets created successfully!');
+        } catch (ticketError) {
+          console.error("Error creating tickets:", ticketError);
+          alert('Event created successfully, but there was an error creating tickets. Please add tickets manually.');
+        }
+      } else {
+        alert('Event created successfully!');
+      }
 
       setFormData({
         title: "",
@@ -230,8 +259,6 @@ const AddEvent = () => {
         setMarker(null);
       }
 
-      alert('Event created successfully!');
-
     } catch (error) {
       console.error("Error creating event:", error);
       alert('Error creating event. Please try again.');
@@ -241,37 +268,26 @@ const AddEvent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8">
       <div className="w-full max-w-7xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Create New Event</h2>
-        
-        <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-700 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab("event")}
-            className={`px-4 md:px-8 py-3 font-semibold transition-all whitespace-nowrap ${
-              activeTab === "event"
-                ? "text-blue-400 border-b-2 border-blue-400"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            Event Details
-          </button>
-          <button
-            onClick={() => setActiveTab("tickets")}
-            className={`px-4 md:px-8 py-3 font-semibold transition-all whitespace-nowrap ${
-              activeTab === "tickets"
-                ? "text-blue-400 border-b-2 border-blue-400"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            Tickets ({tickets.length})
-          </button>
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-2">
+            Create New Event
+          </h1>
+          <p className="text-gray-400">Fill in the details below to create your event and set up ticketing</p>
         </div>
 
-        <div className="space-y-6">
-          {activeTab === "event" && (
-            <div className="bg-gray-800 rounded-lg p-4 md:p-6 lg:p-8 space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Left Column - Event Details */}
+          <div className="xl:col-span-2 space-y-6">
+            {/* Basic Information */}
+            <div className="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
+              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <FileText className="text-blue-400" size={24} />
+                Basic Information
+              </h2>
+              
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-300 mb-2">
                     Event Title *
@@ -282,11 +298,63 @@ const AddEvent = () => {
                     value={formData.title}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                     placeholder="Enter event title"
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    Description *
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    rows={4}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none transition-all"
+                    placeholder="Describe your event"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                      Start Time *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={formData.time[0]}
+                      onChange={(e) => handleTimeChange(0, e.target.value)}
+                      required
+                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                      End Time *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={formData.time[1]}
+                      onChange={(e) => handleTimeChange(1, e.target.value)}
+                      required
+                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
+              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <MapPin className="text-blue-400" size={24} />
+                Location
+              </h2>
+              
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-300 mb-2">
                     Address *
@@ -297,161 +365,135 @@ const AddEvent = () => {
                     value={formData.address}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="Event address"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Event address (or click on map)"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  Description *
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                  rows={4}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                  placeholder="Describe your event"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  Event Time *
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Start Time</label>
-                    <input
-                      type="datetime-local"
-                      value={formData.time[0]}
-                      onChange={(e) => handleTimeChange(0, e.target.value)}
-                      required
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">End Time</label>
-                    <input
-                      type="datetime-local"
-                      value={formData.time[1]}
-                      onChange={(e) => handleTimeChange(1, e.target.value)}
-                      required
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-300 mb-2">
-                    Location * (Click on map to select)
+                    Click on map to select location *
                   </label>
                   <div 
                     id="event-map" 
-                    className="w-full h-64 md:h-80 lg:h-96 rounded-lg border border-gray-600 mb-4 bg-gray-700"
+                    className="w-full h-80 rounded-lg border border-gray-600 bg-gray-700 overflow-hidden"
                   ></div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">Latitude</label>
-                      <input
-                        type="text"
-                        value={formData.latitude}
-                        readOnly
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">Longitude</label>
-                      <input
-                        type="text"
-                        value={formData.longitude}
-                        readOnly
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400"
-                      />
-                    </div>
-                  </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">
-                      Banner Image
-                    </label>
+                    <label className="block text-xs text-gray-400 mb-1">Latitude</label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBannerChange}
-                      disabled={uploading.banner}
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer text-sm"
+                      type="text"
+                      value={formData.latitude}
+                      readOnly
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400 text-sm"
                     />
-                    {uploading.banner && (
-                      <p className="text-sm text-blue-400 mt-2">Uploading banner...</p>
-                    )}
-                    {bannerId && !uploading.banner && (
-                      <p className="text-sm text-green-400 mt-2">✓ Banner uploaded successfully!</p>
-                    )}
-                    {bannerFile && (
-                      <p className="text-sm text-gray-400 mt-2 truncate">Selected: {bannerFile.name}</p>
-                    )}
                   </div>
-
                   <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">
-                      Gallery Images
-                    </label>
+                    <label className="block text-xs text-gray-400 mb-1">Longitude</label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleGalleryChange}
-                      disabled={uploading.gallery}
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer text-sm"
+                      type="text"
+                      value={formData.longitude}
+                      readOnly
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400 text-sm"
                     />
-                    {uploading.gallery && (
-                      <p className="text-sm text-blue-400 mt-2">Uploading gallery images...</p>
-                    )}
-                    {galleryIds.length > 0 && !uploading.gallery && (
-                      <p className="text-sm text-green-400 mt-2">
-                        ✓ {galleryIds.length} image(s) uploaded successfully!
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
-              
-              {galleryFiles.length > 0 && (
-                <div className="border border-gray-600 rounded-lg p-4 bg-gray-750">
-                  <h4 className="font-semibold text-gray-300 mb-3">Gallery Files:</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {galleryFiles.map((file, index) => (
-                      <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-700 rounded-lg">
-                        <span className="text-sm text-gray-300 truncate flex-1 mr-2">{file.name}</span>
-                        <button 
-                          type="button" 
-                          onClick={() => removeGalleryFile(index)}
-                          className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors flex-shrink-0"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          )}
 
-          {activeTab === "tickets" && (
-            <div className="bg-gray-800 rounded-lg p-4 md:p-6 lg:p-8 space-y-6">
-              <h3 className="text-xl font-semibold text-gray-200">Ticket Information</h3>
+            {/* Media */}
+            <div className="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
+              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <Image className="text-blue-400" size={24} />
+                Media
+              </h2>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    Banner Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBannerChange}
+                    disabled={uploading.banner}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer text-sm transition-all"
+                  />
+                  {uploading.banner && (
+                    <p className="text-sm text-blue-400 mt-2 flex items-center gap-2">
+                      <Loader2 className="animate-spin" size={16} /> Uploading banner...
+                    </p>
+                  )}
+                  {bannerId && !uploading.banner && (
+                    <p className="text-sm text-green-400 mt-2 flex items-center gap-2">
+                      <Check size={16} /> Banner uploaded successfully!
+                    </p>
+                  )}
+                  {bannerFile && (
+                    <p className="text-sm text-gray-400 mt-2 truncate">Selected: {bannerFile.name}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    Gallery Images
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryChange}
+                    disabled={uploading.gallery}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer text-sm transition-all"
+                  />
+                  {uploading.gallery && (
+                    <p className="text-sm text-blue-400 mt-2 flex items-center gap-2">
+                      <Loader2 className="animate-spin" size={16} /> Uploading gallery images...
+                    </p>
+                  )}
+                  {galleryIds.length > 0 && !uploading.gallery && (
+                    <p className="text-sm text-green-400 mt-2 flex items-center gap-2">
+                      <Check size={16} /> {galleryIds.length} image(s) uploaded successfully!
+                    </p>
+                  )}
+                </div>
+
+                {galleryFiles.length > 0 && (
+                  <div className="border border-gray-600 rounded-lg p-4 bg-gray-750">
+                    <h4 className="font-semibold text-gray-300 mb-3 text-sm">Gallery Files:</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {galleryFiles.map((file, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-700 rounded-lg">
+                          <span className="text-xs text-gray-300 truncate flex-1 mr-2">{file.name}</span>
+                          <button 
+                            type="button" 
+                            onClick={() => removeGalleryFile(index)}
+                            className="p-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex-shrink-0"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Tickets */}
+          <div className="xl:col-span-1">
+            <div className="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 sticky top-8">
+              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <Ticket className="text-blue-400" size={24} />
+                Tickets
+              </h2>
+              
+              <div className="space-y-4 mb-6">
+                <div>
                   <label className="block text-sm font-semibold text-gray-300 mb-2">
                     Ticket Name
                   </label>
@@ -459,65 +501,98 @@ const AddEvent = () => {
                     type="text"
                     value={currentTicket.name}
                     onChange={(e) => setCurrentTicket({...currentTicket, name: e.target.value})}
-                    placeholder="e.g., VIP, Regular, Early Bird"
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    placeholder="e.g., VIP, Regular"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    value={currentTicket.amount}
-                    onChange={(e) => setCurrentTicket({...currentTicket, amount: e.target.value})}
-                    placeholder="0.00"
-                    step="0.01"
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                      Cost (₦)
+                    </label>
+                    <input
+                      type="number"
+                      value={currentTicket.cost}
+                      onChange={(e) => setCurrentTicket({...currentTicket, cost: e.target.value})}
+                      placeholder="0.00"
+                      step="0.01"
+                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      value={currentTicket.quantity}
+                      onChange={(e) => setCurrentTicket({...currentTicket, quantity: e.target.value})}
+                      placeholder="0"
+                      min="0"
+                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    />
+                  </div>
                 </div>
+                
+                <button
+                  type="button"
+                  onClick={addTicket}
+                  disabled={!currentTicket.name || !currentTicket.cost}
+                  className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all font-semibold shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Plus size={20} />
+                  Add Ticket
+                </button>
               </div>
-              
-              <button
-                type="button"
-                onClick={addTicket}
-                disabled={!currentTicket.name || !currentTicket.amount}
-                className="w-full sm:w-auto px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors font-semibold"
-              >
-                Add Ticket
-              </button>
 
               {tickets.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="font-semibold text-gray-300 mb-3">Added Tickets:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="border-t border-gray-700 pt-4">
+                  <h4 className="font-semibold text-gray-300 mb-3 text-sm">Added Tickets ({tickets.length}):</h4>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
                     {tickets.map((ticket, index) => (
-                      <div key={index} className="flex flex-col justify-between p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-gray-500 transition-colors">
-                        <div className="mb-3">
-                          <p className="font-medium text-white text-lg">{ticket.name}</p>
-                          <p className="text-sm text-gray-400 mt-1">₦{parseFloat(ticket.amount).toFixed(2)}</p>
+                      <div key={index} className="p-3 bg-gray-700 rounded-lg border border-gray-600 hover:border-blue-500 transition-all">
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="font-medium text-white text-sm">{ticket.name}</p>
+                          <button 
+                            type="button" 
+                            onClick={() => removeTicket(index)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <X size={16} />
+                          </button>
                         </div>
-                        <button 
-                          type="button" 
-                          onClick={() => removeTicket(index)}
-                          className="w-full px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
-                        >
-                          Remove
-                        </button>
+                        <div className="text-xs text-gray-400 space-y-1">
+                          <p>Cost: ₦{parseFloat(ticket.cost).toFixed(2)}</p>
+                          <p>Qty: {ticket.quantity || 0} | {ticket.currency}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-          )}
+          </div>
+        </div>
 
+        {/* Submit Button */}
+        <div className="mt-8">
           <button 
             onClick={handleSubmit}
             disabled={loading || uploading.banner || uploading.gallery} 
-            className="w-full py-4 bg-blue-600 text-white font-bold text-lg rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-lg rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed transition-all shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
           >
-            {loading ? "Creating Event..." : "Create Event"}
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={24} />
+                Creating Event...
+              </>
+            ) : (
+              <>
+                <Check size={24} />
+                Create Event{tickets.length > 0 ? ` with ${tickets.length} Ticket${tickets.length > 1 ? 's' : ''}` : ''}
+              </>
+            )}
           </button>
         </div>
       </div>
