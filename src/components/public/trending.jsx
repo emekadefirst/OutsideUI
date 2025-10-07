@@ -2,40 +2,27 @@ import React, { useEffect, useState } from "react";
 import { MapPin, Calendar, Users, Sparkles } from "lucide-react";
 import { AllEvent } from "../../services/events";
 import { formatDateTime } from "../../utils/dateUtils";
-import { getUserLocation, calculateDistance, formatDistance } from "../../utils/locationUtils";
+import EventDetailPage from "../../pages/public/eventsDetails";
 
 const TrendingComponent = () => {
   const [trendingEvents, setTrendingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState(null);
+  const [selectedEventId, setSelectedEventId] = useState(null);
 
   const fetchTrendingEvents = async () => {
     setLoading(true);
     try {
-      // Get user location
-      const location = await getUserLocation();
-      setUserLocation(location);
-      
       // Fetch all events
       const response = await AllEvent();
       const data = response;
 
       if (data && Array.isArray(data) && data.length > 0) {
-        // Take first 3 events and enhance with location/formatting
+        // Take first 3 events and enhance with formatting
         const firstThreeEvents = data.slice(0, 3).map(event => {
-          const distance = location ? 
-            calculateDistance(
-              location.latitude, 
-              location.longitude, 
-              event.latitude, 
-              event.longitude
-            ) : null;
-          
           const dateTime = formatDateTime(event.time);
           
           return {
             ...event,
-            distance,
             formattedDate: dateTime.date,
             formattedTime: dateTime.time,
             endTime: dateTime.endTime
@@ -51,14 +38,31 @@ const TrendingComponent = () => {
     }
   };
 
+  const handleEventClick = (eventId) => {
+    setSelectedEventId(eventId);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedEventId(null);
+  };
+
   useEffect(() => {
     fetchTrendingEvents();
   }, []);
 
+  // If an event is selected, show the EventDetailPage
+  if (selectedEventId) {
+    return (
+      <EventDetailPage 
+        eventId={selectedEventId} 
+        onClose={handleCloseDetail}
+      />
+    );
+  }
+
   if (loading) {
     return (
       <section className="py-20 bg-black relative">
-
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between mb-12">
             <div className="flex items-center gap-3">
@@ -119,6 +123,7 @@ const TrendingComponent = () => {
               key={event.id} 
               event={event} 
               index={index}
+              onEventClick={handleEventClick}
             />
           ))}
         </div>
@@ -138,7 +143,7 @@ const TrendingComponent = () => {
 };
 
 // Enhanced Trending Event Card Component
-const TrendingEventCard = ({ event, index }) => {
+const TrendingEventCard = ({ event, index, onEventClick }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   // Trending badge colors
@@ -149,6 +154,10 @@ const TrendingEventCard = ({ event, index }) => {
   ];
 
   const trendingLabels = ['#1 Trending', '#2 Trending', '#3 Trending'];
+
+  const handleViewDetails = () => {
+    onEventClick(event.id);
+  };
 
   return (
     <div
@@ -166,18 +175,6 @@ const TrendingEventCard = ({ event, index }) => {
           </span>
         </div>
       </div>
-
-      {/* Distance Badge */}
-      {event.distance && (
-        <div className="absolute top-4 right-4 z-30">
-          <div className="bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-            <span className="text-white text-xs font-medium flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              {formatDistance(event.distance)}
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Background Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10"></div>
@@ -248,7 +245,10 @@ const TrendingEventCard = ({ event, index }) => {
         <div className={`mt-4 transition-all duration-300 transform ${
           isHovered ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
         }`}>
-          <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl">
+          <button 
+            onClick={handleViewDetails}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+          >
             View Details
           </button>
         </div>
