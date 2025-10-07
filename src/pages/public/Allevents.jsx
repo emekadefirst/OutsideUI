@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AllEvent } from "../../services/events";
+import EventDetailPage from "./eventsDetails";
 
 // Simple date formatting without heavy operations
 const formatEventDates = (timeArray) => {
@@ -27,12 +28,16 @@ const formatEventDates = (timeArray) => {
 };
 
 // Simplified TicketCard without heavy memoization
-const TicketCard = ({ ticket }) => {
+const TicketCard = ({ ticket, onEventClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const { dateDisplay, timeDisplay } = formatEventDates(ticket.time);
   const hostInitial = ticket.host?.name?.charAt(0).toUpperCase() || '?';
+
+  const handleClick = () => {
+    onEventClick(ticket.id);
+  };
 
   return (
     <div
@@ -109,8 +114,11 @@ const TicketCard = ({ ticket }) => {
               Save Event
             </button>
             
-            <button className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-4 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl">
-              Cop Tickets
+            <button 
+              onClick={handleClick}
+              className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-4 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              View Details
             </button>
           </div>
         </div>
@@ -200,6 +208,7 @@ const Tickets = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [selectedEventId, setSelectedEventId] = useState(null);
 
   const fetchEvents = async () => {
     try {
@@ -216,6 +225,14 @@ const Tickets = () => {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  const handleEventClick = (eventId) => {
+    setSelectedEventId(eventId);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedEventId(null);
+  };
 
   // Simple filter logic
   const filteredTickets = React.useMemo(() => {
@@ -243,6 +260,16 @@ const Tickets = () => {
     }
   }, [tickets, filter]);
 
+  // If an event is selected, show the EventDetailPage
+  if (selectedEventId) {
+    return (
+      <EventDetailPage 
+        eventId={selectedEventId} 
+        onClose={handleCloseDetail}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black">
       <section className="py-20">
@@ -262,7 +289,11 @@ const Tickets = () => {
           {!loading && !error && filteredTickets.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredTickets.map((ticket) => (
-                <TicketCard key={ticket.id} ticket={ticket} />
+                <TicketCard 
+                  key={ticket.id} 
+                  ticket={ticket} 
+                  onEventClick={handleEventClick}
+                />
               ))}
             </div>
           )}
