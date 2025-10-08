@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MapPin, Calendar, Users, Sparkles } from "lucide-react";
-import { AllEvent } from "../../services/events";
+import { useEventsStore } from "../../stores";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 import { formatDateTime } from "../../utils/dateUtils";
-import EventDetailPage from "../../pages/public/eventsDetails";
 
 const TrendingComponent = () => {
+  const navigate = useNavigate();
+  const { getAllEvents, events: storeEvents } = useEventsStore();
+  useAutoRefresh(15); // Auto-refresh every 15 minutes
+  
   const [trendingEvents, setTrendingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedEventId, setSelectedEventId] = useState(null);
 
   const fetchTrendingEvents = async () => {
     setLoading(true);
     try {
-      // Fetch all events
-      const response = await AllEvent();
-      const data = response;
+      // Use cached data if available, otherwise fetch
+      const data = storeEvents.length > 0 ? storeEvents : await getAllEvents();
 
       if (data && Array.isArray(data) && data.length > 0) {
         const firstThreeEvents = data.slice(0, 3).map(event => {
@@ -37,32 +40,35 @@ const TrendingComponent = () => {
     }
   };
 
-  const handleEventClick = (eventId) => {
-    setSelectedEventId(eventId);
-  };
+  // Update trending events when store events change
+  useEffect(() => {
+    if (storeEvents.length > 0) {
+      const firstThreeEvents = storeEvents.slice(0, 3).map(event => {
+        const dateTime = formatDateTime(event.time);
+        return {
+          ...event,
+          formattedDate: dateTime.date,
+          formattedTime: dateTime.time,
+          endTime: dateTime.endTime
+        };
+      });
+      setTrendingEvents(firstThreeEvents);
+      setLoading(false);
+    }
+  }, [storeEvents]);
 
-  const handleCloseDetail = () => {
-    setSelectedEventId(null);
+  const handleEventClick = (eventId) => {
+    navigate(`/events/${eventId}`);
   };
 
   useEffect(() => {
     fetchTrendingEvents();
   }, []);
 
-  // If an event is selected, show the EventDetailPage
-  if (selectedEventId) {
-    return (
-      <EventDetailPage 
-        eventId={selectedEventId} 
-        onClose={handleCloseDetail}
-      />
-    );
-  }
-
   if (loading) {
     return (
       <section className="py-20 bg-black relative">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-6 max-w-7xl">
           <div className="flex items-center justify-between mb-12">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
@@ -92,7 +98,7 @@ const TrendingComponent = () => {
       <div className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"></div>
       
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-6 relative z-10 max-w-7xl">
         <div className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25">

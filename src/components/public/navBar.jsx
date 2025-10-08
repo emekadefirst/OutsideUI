@@ -25,12 +25,12 @@ const NavBar = () => {
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-gradient-to-b from-black/80 to-transparent">
-      <div className="container mt-1 mx-auto px-6 py-4">
+      <div className="container mt-1 mx-auto px-6 py-4 max-w-7xl">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="text-white text-3xl font-extrabold tracking-tighter select-none">
             <a href="/">
-              <img src={Logo} className="h-15 w-15 object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-300" alt="" />
+              <img src={Logo} className="w-[65px] md:w-[100px] object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-300" alt="" />
             </a>
           </div>
 
@@ -57,7 +57,7 @@ const NavBar = () => {
             <a href="/auth">
               <button
                 className="bg-white text-black px-6 py-2 rounded-full text-sm font-semibold 
-                           hover:scale-105 hover:bg-gray-100 transition-all duration-300"
+                hover:scale-105 hover:bg-gray-100 transition-all duration-300"
               >
                 Join Beta
               </button>

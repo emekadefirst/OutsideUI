@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Lock, User, Shield, ArrowRight } from "lucide-react";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";   // ✅ fix
-import { login, getUser } from "../../services/auth";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../stores";
 
 
 
 
 const AdminLogin = () => {
+  const { login, getUser } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

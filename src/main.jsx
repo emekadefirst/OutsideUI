@@ -3,9 +3,13 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
+// Initialize API configuration
+import "./services/api";
+
 // Pages & Components
 import HomePage from "./pages/public/index";
 import Tickets from "./pages/public/Allevents";
+import EventDetailPage from "./pages/public/eventsDetails";
 import AdminLogin from "./pages/admin";
 import AdminDashboard from "./pages/admin/dashboard";
 import UserList from "./pages/admin/user/allusers";
@@ -30,6 +34,7 @@ createRoot(document.getElementById("root")).render(
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/discover" element={<Tickets />} />
+          <Route path="/events/:eventId" element={<EventDetailPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Route>
 

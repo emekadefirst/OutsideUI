@@ -17,9 +17,10 @@ import {
   Bell,
   Search
 } from "lucide-react";
-import { logoutUser } from "../../services/auth";
+import { useAuthStore } from "../../stores";
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
+  const { logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -332,7 +333,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
           {/* Logout button */}
           <button
             onClick={() => {
-              logoutUser(); 
+              logout(); 
             }}
             onMouseEnter={() => setHoveredItem("logout")}
             onMouseLeave={() => setHoveredItem(null)}

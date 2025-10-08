@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { AllEvent } from "../../../services/events";
+import { useEventsStore } from "../../../stores";
 import {
     Download,
     Plus,
@@ -38,13 +38,15 @@ const EventList = () => {
     const [userLocation, setUserLocation] = useState(null);
     const [loadingLocation, setLoadingLocation] = useState(false);
 
+    const { getAllEvents, refreshEvents, events: storeEvents } = useEventsStore();
+    
     // Fetch events from API
-    const fetchEvents = useCallback(async () => {
+    const fetchEvents = useCallback(async (forceRefresh = false) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await AllEvent()
-            console.log("Response D", response)
+            const response = forceRefresh ? await refreshEvents() : await getAllEvents();
+            console.log("Response D", response);
             setEvents(response);
         } catch (err) {
             console.error("Error fetching events:", err);
@@ -53,7 +55,15 @@ const EventList = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [getAllEvents, refreshEvents]);
+
+    // Use store data if available
+    useEffect(() => {
+        if (storeEvents.length > 0 && events.length === 0) {
+            setEvents(storeEvents);
+            setLoading(false);
+        }
+    }, [storeEvents, events.length]);
 
     useEffect(() => {
         fetchEvents();

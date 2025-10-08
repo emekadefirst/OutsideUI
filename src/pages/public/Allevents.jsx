@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { AllEvent } from "../../services/events";
-import EventDetailPage from "./eventsDetails";
+import { useNavigate } from "react-router-dom";
+import { useEventsStore } from "../../stores";
+import { useAutoRefresh } from "../../hooks/useAutoRefresh";
 
 // Simple date formatting without heavy operations
 const formatEventDates = (timeArray) => {
@@ -204,76 +205,60 @@ const EventsHeader = ({ eventsCount, loading, error, filter, onFilterChange }) =
 
 // Main component - simplified
 const Tickets = () => {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
-  const [selectedEventId, setSelectedEventId] = useState(null);
 
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      const events = await AllEvent();
-      setTickets(events);
-    } catch (err) {
-      setError(err.message || "Failed to load events");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { getAllEvents, events, loading } = useEventsStore();
+  useAutoRefresh(10); // Auto-refresh every 10 minutes
 
+  // Load events only if not already loaded
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    const loadEvents = async () => {
+      try {
+        await getAllEvents(); // Uses cache if available
+      } catch (err) {
+        setError(err.message || "Failed to load events");
+      }
+    };
+    
+    loadEvents();
+  }, [getAllEvents]);
 
   const handleEventClick = (eventId) => {
-    setSelectedEventId(eventId);
-  };
-
-  const handleCloseDetail = () => {
-    setSelectedEventId(null);
+    navigate(`/events/${eventId}`);
   };
 
   // Simple filter logic
   const filteredTickets = React.useMemo(() => {
-    if (!tickets.length) return [];
+    if (!events.length) return [];
     
     const now = new Date();
     
     switch (filter) {
       case 'upcoming':
-        return tickets
+        return events
           .filter(event => event.time.some(time => new Date(time) > now))
           .sort((a, b) => new Date(a.time[0]) - new Date(b.time[0]));
       
       case 'host':
-        return [...tickets].sort((a, b) => 
+        return [...events].sort((a, b) => 
           (a.host?.name || '').localeCompare(b.host?.name || '')
         );
       
       case 'nearest':
         // Simple implementation without location for now
-        return tickets;
+        return events;
       
       default:
-        return tickets;
+        return events;
     }
-  }, [tickets, filter]);
-
-  // If an event is selected, show the EventDetailPage
-  if (selectedEventId) {
-    return (
-      <EventDetailPage 
-        eventId={selectedEventId} 
-        onClose={handleCloseDetail}
-      />
-    );
-  }
+  }, [events, filter]);
 
   return (
     <div className="min-h-screen bg-black">
       <section className="py-20">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 max-w-7xl">
           <EventsHeader 
             eventsCount={filteredTickets.length}
             loading={loading}
@@ -283,7 +268,7 @@ const Tickets = () => {
           />
 
           {loading && <LoadingState />}
-          {error && <ErrorState onRetry={fetchEvents} />}
+          {error && <ErrorState onRetry={() => getAllEvents(true)} />}
           {!loading && !error && filteredTickets.length === 0 && <EmptyState />}
           
           {!loading && !error && filteredTickets.length > 0 && (
