@@ -1,10 +1,10 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { userListService } from "../../../services/users";
+import { useUsersStore } from "../../../stores";
 import { Download, Plus } from "lucide-react";
 
 const UserList = () => {
-  const [users, setUsers] = useState([]);
+  const { users, loading, getUserList } = useUsersStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -14,28 +14,21 @@ const UserList = () => {
   const [usersPerPage] = useState(10);
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Fetch users from API
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        setLoading(true);
         setError(null);
-        const data = await userListService();
-        setUsers(Array.isArray(data.data) ? data.data : []);
+        await getUserList();
       } catch (err) {
         console.error(err);
         setError("Failed to load users.");
-        // Set users to empty array on error
-        setUsers([]);
-      } finally {
-        setLoading(false);
       }
     };
     fetchUsers();
-  }, []);
+  }, [getUserList]);
 
   // Filtering - Add safety check
   const filteredUsers = Array.isArray(users)

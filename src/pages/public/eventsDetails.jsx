@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Clock, User, Bookmark, Share2, ChevronLeft, ArrowLeft } from 'lucide-react';
-import { getEventById } from "../../services/events";
-import { getTicketByEvent } from "../../services/tickets";
+import { useEventsStore, useTicketsStore } from "../../stores";
 
-const EventDetailPage = ({ eventId, onClose }) => {
+const EventDetailPage = () => {
+    const { eventId } = useParams();
+    const navigate = useNavigate();
+    const { getEventById } = useEventsStore();
+    const { getTicketsByEvent } = useTicketsStore();
+    
     const [event, setEvent] = useState(null);
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -26,7 +31,7 @@ const EventDetailPage = ({ eventId, onClose }) => {
 
                 // Try to fetch tickets, but handle 404 gracefully
                 try {
-                    const ticketsData = await getTicketByEvent(eventId);
+                    const ticketsData = await getTicketsByEvent(eventId);
                     setTickets(ticketsData);
                 } catch (ticketErr) {
                     if (ticketErr.response?.status === 404) {
@@ -138,11 +143,7 @@ const EventDetailPage = ({ eventId, onClose }) => {
 
     // Handle back button click
     const handleBackClick = () => {
-        if (onClose) {
-            onClose();
-        } else {
-            window.history.back();
-        }
+        navigate(-1);
     };
 
     const allImages = event ? [event.banner, ...event.gallery] : [];
@@ -228,6 +229,17 @@ const EventDetailPage = ({ eventId, onClose }) => {
                     </div>
                 )}
             </div>
+            {/* Back Button */}
+            <div className="fixed top-20 left-4 z-50">
+                <button
+                    onClick={handleBackClick}
+                    className="flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-xl border border-white/20 hover:bg-black/90 transition-all"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">Back</span>
+                </button>
+            </div>
+
             {/* Hero Section */}
             <div className="pt-16 bg-black">
 

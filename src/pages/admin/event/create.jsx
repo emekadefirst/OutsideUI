@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { FileText, MapPin, Image, Ticket, Loader2, Check, X, Plus } from "lucide-react";
-import UploadFile from "../../../services/media";
-import { getUser } from "../../../services/auth";
-import { CreateEvent } from "../../../services/events";
-import { CreateTickets } from "../../../services/tickets";
+import { useMediaStore, useAuthStore, useEventsStore, useTicketsStore } from "../../../stores";
 
 const AddEvent = () => {
+  const { getUser } = useAuthStore();
+  const { createEvent } = useEventsStore();
+  const { createTickets } = useTicketsStore();
+  const { uploadFile } = useMediaStore();
+  
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -128,9 +130,9 @@ const AddEvent = () => {
 
     setBannerFile(file);
     setUploading(prev => ({ ...prev, banner: true }));
-
+    
     try {
-      const result = await UploadFile(file);
+      const result = await uploadFile(file);
       if (result && result.id) {
         setBannerId(result.id);
       }
@@ -153,7 +155,7 @@ const AddEvent = () => {
       
       for (const file of files) {
         try {
-          const result = await UploadFile(file);
+          const result = await uploadFile(file);
           if (result && result.id) {
             uploadedIds.push(result.id);
           }
@@ -214,7 +216,7 @@ const AddEvent = () => {
         address: formData.address
       };
 
-      const eventResponse = await CreateEvent(eventData);
+      const eventResponse = await createEvent(eventData);
       console.log('Event created:', eventResponse);
 
       if (tickets.length > 0 && eventResponse && eventResponse.id) {
@@ -229,7 +231,7 @@ const AddEvent = () => {
         };
 
         try {
-          const ticketResponse = await CreateTickets(ticketData);
+          const ticketResponse = await createTickets(ticketData);
           console.log('Tickets created:', ticketResponse);
           alert('Event and tickets created successfully!');
         } catch (ticketError) {
