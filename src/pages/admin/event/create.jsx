@@ -445,7 +445,7 @@ const AddEvent = () => {
                   </label>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     multiple
                     onChange={handleGalleryChange}
                     disabled={uploading.gallery}
