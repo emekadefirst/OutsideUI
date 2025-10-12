@@ -215,6 +215,7 @@ const AddEvent = () => {
         longitude: parseFloat(formData.longitude),
         address: formData.address
       };
+      console.log(eventData)
 
       const eventResponse = await createEvent(eventData);
       console.log('Event created:', eventResponse);
@@ -441,7 +442,7 @@ const AddEvent = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-300 mb-2">
-                    Gallery Images
+                    Gallery Media
                   </label>
                   <input
                     type="file"
