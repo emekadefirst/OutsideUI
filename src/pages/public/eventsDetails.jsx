@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Clock, User, Bookmark, Share2, ChevronLeft, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, Clock, User, Bookmark, Share2, ChevronLeft, ArrowLeft, Play, Pause } from 'lucide-react';
 import { useEventsStore, useTicketsStore } from "../../stores";
 import TicketPurchaseModal from '../../components/ui/TicketPurchaseModal';
 
@@ -9,7 +9,7 @@ const EventDetailPage = () => {
     const navigate = useNavigate();
     const { getEventById } = useEventsStore();
     const { getTicketsByEvent } = useTicketsStore();
-    
+
     const [event, setEvent] = useState(null);
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,6 +19,13 @@ const EventDetailPage = () => {
     const [isSaved, setIsSaved] = useState(false);
     const [ticketError, setTicketError] = useState(null);
     const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+    const [videoPlaying, setVideoPlaying] = useState({});
+    
+    // Refs for video elements and touch handling
+    const mediaContainerRef = useRef(null);
+    const videoRefs = useRef([]);
+    const touchStartX = useRef(0);
+    const touchEndX = useRef(0);
 
     useEffect(() => {
         const fetchEventData = async () => {
@@ -55,6 +62,144 @@ const EventDetailPage = () => {
         }
     }, [eventId]);
 
+    const allImages = event ? [event.banner, ...event.gallery] : [];
+
+    // Initialize video refs array
+    useEffect(() => {
+        if (allImages.length > 0) {
+            videoRefs.current = Array(allImages.length).fill().map((_, i) => videoRefs.current[i] || null);
+        }
+    }, [allImages.length]);
+
+    // Handle video playback when active index changes
+    useEffect(() => {
+        // Pause all videos first
+        videoRefs.current.forEach((video, index) => {
+            if (video && index !== activeImageIndex) {
+                video.pause();
+                video.currentTime = 0;
+                setVideoPlaying(prev => ({ ...prev, [index]: false }));
+            }
+        });
+
+        // Play the active video if it's a video file
+        const activeMedia = allImages[activeImageIndex];
+        if (activeMedia && /\.(mp4|webm|ogg)$/i.test(activeMedia)) {
+            const activeVideo = videoRefs.current[activeImageIndex];
+            if (activeVideo) {
+                const playPromise = activeVideo.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        setVideoPlaying(prev => ({ ...prev, [activeImageIndex]: true }));
+                    }).catch(error => {
+                        console.log('Video autoplay failed:', error);
+                        setVideoPlaying(prev => ({ ...prev, [activeImageIndex]: false }));
+                    });
+                }
+            }
+        }
+    }, [activeImageIndex, allImages]);
+
+    // Touch handlers for swipe gestures
+    const handleTouchStart = (e) => {
+        touchStartX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchMove = (e) => {
+        touchEndX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = () => {
+        if (!touchStartX.current || !touchEndX.current) return;
+
+        const diffX = touchStartX.current - touchEndX.current;
+        const minSwipeDistance = 50; // Minimum distance for a swipe
+
+        if (Math.abs(diffX) > minSwipeDistance) {
+            if (diffX > 0) {
+                // Swipe left - next media
+                handleNext();
+            } else {
+                // Swipe right - previous media
+                handlePrevious();
+            }
+        }
+
+        // Reset values
+        touchStartX.current = 0;
+        touchEndX.current = 0;
+    };
+
+    const handleNext = () => {
+        setActiveImageIndex((prevIndex) => 
+            prevIndex === allImages.length - 1 ? 0 : prevIndex + 1
+        );
+    };
+
+    const handlePrevious = () => {
+        setActiveImageIndex((prevIndex) => 
+            prevIndex === 0 ? allImages.length - 1 : prevIndex - 1
+        );
+    };
+
+    // Toggle video play/pause
+    const toggleVideoPlayback = (index) => {
+        const video = videoRefs.current[index];
+        if (video) {
+            if (video.paused) {
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        setVideoPlaying(prev => ({ ...prev, [index]: true }));
+                    }).catch(error => {
+                        console.log('Video play failed:', error);
+                    });
+                }
+            } else {
+                video.pause();
+                setVideoPlaying(prev => ({ ...prev, [index]: false }));
+            }
+        }
+    };
+
+    // Handle video ended
+    const handleVideoEnded = (index) => {
+        setVideoPlaying(prev => ({ ...prev, [index]: false }));
+    };
+
+    // Handle video play
+    const handleVideoPlay = (index) => {
+        setVideoPlaying(prev => ({ ...prev, [index]: true }));
+    };
+
+    // Handle video pause
+    const handleVideoPause = (index) => {
+        setVideoPlaying(prev => ({ ...prev, [index]: false }));
+    };
+
+    // Keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowLeft') {
+                handlePrevious();
+            } else if (e.key === 'ArrowRight') {
+                handleNext();
+            } else if (e.key === ' ' || e.key === 'Spacebar') {
+                // Space bar to play/pause current video
+                const activeMedia = allImages[activeImageIndex];
+                if (activeMedia && /\.(mp4|webm|ogg)$/i.test(activeMedia)) {
+                    e.preventDefault();
+                    toggleVideoPlayback(activeImageIndex);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [activeImageIndex, allImages]);
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -77,7 +222,6 @@ const EventDetailPage = () => {
     // Generate Google Maps Static Image URL
     const getGoogleMapsImageUrl = () => {
         if (!event?.location?.latitude || !event?.location?.longitude) {
-            // Fallback to a generic map image or address-based image
             return `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(event?.address || '')}&zoom=15&size=600x300&maptype=roadmap&markers=color:red%7C${encodeURIComponent(event?.address || '')}&key=YOUR_GOOGLE_MAPS_API_KEY`;
         }
         return `https://maps.googleapis.com/maps/api/staticmap?center=${event.location.latitude},${event.location.longitude}&zoom=15&size=600x300&maptype=roadmap&markers=color:red%7C${event.location.latitude},${event.location.longitude}&key=YOUR_GOOGLE_MAPS_API_KEY`;
@@ -107,12 +251,10 @@ const EventDetailPage = () => {
                 console.log('Error sharing:', err);
             }
         } else {
-            // Fallback: copy to clipboard
             try {
                 await navigator.clipboard.writeText(`${shareText} - ${mapsUrl}`);
                 alert('Location link copied to clipboard!');
             } catch (err) {
-                // Final fallback: open in new tab
                 window.open(mapsUrl, '_blank');
             }
         }
@@ -133,7 +275,6 @@ const EventDetailPage = () => {
                 console.log('Error sharing:', err);
             }
         } else {
-            // Fallback: copy to clipboard
             try {
                 await navigator.clipboard.writeText(`${event.title} - ${window.location.href}`);
                 alert('Event link copied to clipboard!');
@@ -147,8 +288,6 @@ const EventDetailPage = () => {
     const handleBackClick = () => {
         navigate(-1);
     };
-
-    const allImages = event ? [event.banner, ...event.gallery] : [];
 
     if (loading) {
         return (
@@ -209,28 +348,94 @@ const EventDetailPage = () => {
 
     return (
         <div className="min-h-screen text-white">
-            <div className="relative h-96 sm:h-[500px] overflow-hidden">
-                <img
-                    src={allImages[activeImageIndex]}
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                />
+            <div 
+                ref={mediaContainerRef}
+                className="relative h-96 sm:h-[500px] overflow-hidden rounded-2xl"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+            >
+                {/* Image or Video */}
+                {allImages.length > 0 && (
+                    <>
+                        {/\.(mp4|webm|ogg)$/i.test(allImages[activeImageIndex]) ? (
+                            <div className="relative w-full h-full">
+                                <video
+                                    ref={el => videoRefs.current[activeImageIndex] = el}
+                                    key={activeImageIndex}
+                                    src={allImages[activeImageIndex]}
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    className="w-full h-full object-cover"
+                                    onEnded={() => handleVideoEnded(activeImageIndex)}
+                                    onPlay={() => handleVideoPlay(activeImageIndex)}
+                                    onPause={() => handleVideoPause(activeImageIndex)}
+                                />
+                                {/* Play/Pause Button Overlay */}
+                                <button
+                                    onClick={() => toggleVideoPlayback(activeImageIndex)}
+                                    className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-all duration-300 group"
+                                >
+                                    <div className={`bg-black/60 rounded-full p-4 transform transition-all duration-300 group-hover:scale-110 ${videoPlaying[activeImageIndex] ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                                        {videoPlaying[activeImageIndex] ? (
+                                            <Pause className="w-8 h-8 text-white" />
+                                        ) : (
+                                            <Play className="w-8 h-8 text-white ml-1" />
+                                        )}
+                                    </div>
+                                </button>
+                            </div>
+                        ) : (
+                            <img
+                                key={activeImageIndex}
+                                src={allImages[activeImageIndex]}
+                                alt={event.title}
+                                className="w-full h-full object-cover"
+                            />
+                        )}
+                    </>
+                )}
+
+                {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-                {/* Image Gallery Dots */}
+                {/* Navigation Arrows */}
                 {allImages.length > 1 && (
-                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                    <>
+                        <button
+                            onClick={handlePrevious}
+                            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm z-10"
+                        >
+                            <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        <button
+                            onClick={handleNext}
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm rotate-180 z-10"
+                        >
+                            <ChevronLeft className="w-6 h-6" />
+                        </button>
+                    </>
+                )}
+
+                {/* Dots navigation */}
+                {allImages.length > 1 && (
+                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
                         {allImages.map((_, index) => (
                             <button
                                 key={index}
                                 onClick={() => setActiveImageIndex(index)}
-                                className={`h-2 rounded-full transition-all duration-300 ${index === activeImageIndex ? 'bg-white w-8' : 'bg-white/50 w-2'
+                                className={`h-2 rounded-full transition-all duration-300 ${index === activeImageIndex
+                                        ? "bg-white w-8"
+                                        : "bg-white/50 w-2"
                                     }`}
                             />
                         ))}
                     </div>
                 )}
             </div>
+
             {/* Back Button */}
             <div className="fixed top-20 left-4 z-50">
                 <button
@@ -244,8 +449,6 @@ const EventDetailPage = () => {
 
             {/* Hero Section */}
             <div className="pt-16 bg-black">
-
-
                 {/* Event Content */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10 bg-black">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -264,8 +467,8 @@ const EventDetailPage = () => {
                                         <button
                                             onClick={() => setIsSaved(!isSaved)}
                                             className={`p-3 rounded-full transition-all duration-300 ${isSaved
-                                                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20'
-                                                    : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/10'
+                                                ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20'
+                                                : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/10'
                                                 }`}
                                         >
                                             <Bookmark className="w-5 h-5" fill={isSaved ? 'currentColor' : 'none'} />
@@ -333,6 +536,11 @@ const EventDetailPage = () => {
                                             rel="noopener noreferrer"
                                             className="block hover:opacity-90 transition-opacity"
                                         >
+                                            {/* Map placeholder - you can add your map component here */}
+                                            <div className="h-48 bg-gray-800 flex items-center justify-center">
+                                                <MapPin className="w-8 h-8 text-orange-400" />
+                                                <span className="ml-2 text-white">View on Map</span>
+                                            </div>
                                         </a>
                                         <div className="p-4">
                                             <div className="flex items-center justify-between">
@@ -344,8 +552,6 @@ const EventDetailPage = () => {
                                             </div>
                                         </div>
                                     </div>
-
-
                                 </div>
                             </div>
                         </div>
@@ -372,10 +578,10 @@ const EventDetailPage = () => {
                                                 key={ticket.id}
                                                 onClick={() => ticket.quantity > 0 && setSelectedTicket(ticket.id)}
                                                 className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${selectedTicket === ticket.id
-                                                        ? 'border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/20'
-                                                        : ticket.quantity === 0
-                                                            ? 'border-red-500/30 bg-red-500/5 cursor-not-allowed'
-                                                            : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+                                                    ? 'border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/20'
+                                                    : ticket.quantity === 0
+                                                        ? 'border-red-500/30 bg-red-500/5 cursor-not-allowed'
+                                                        : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
                                                     }`}
                                             >
                                                 <div className="flex justify-between items-start mb-2">
@@ -387,8 +593,8 @@ const EventDetailPage = () => {
                                                     </div>
                                                 </div>
                                                 <p className={`text-sm ${ticket.quantity === 0
-                                                        ? 'text-red-400 font-semibold'
-                                                        : 'text-white/70'
+                                                    ? 'text-red-400 font-semibold'
+                                                    : 'text-white/70'
                                                     }`}>
                                                     {ticket.quantity === 0
                                                         ? 'SOLD OUT'
@@ -413,11 +619,11 @@ const EventDetailPage = () => {
                                     disabled={!selectedTicket}
                                     onClick={() => selectedTicket && setShowPurchaseModal(true)}
                                     className={`w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${selectedTicket
-                                            ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl hover:scale-105'
-                                            : 'bg-white/10 text-white/40 cursor-not-allowed'
+                                        ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl hover:scale-105'
+                                        : 'bg-white/10 text-white/40 cursor-not-allowed'
                                         }`}
                                 >
-                                    Cop Tickets
+                                    Get Tickets
                                 </button>
 
                                 <p className="text-xs text-white/50 text-center mt-4">
