@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import axios from 'axios';
+import { useAuthStore } from './authStore.js';
 
 export const useOrdersStore = create((set, get) => ({
   orders: [],

@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, User, Mail, CreditCard } from 'lucide-react';
-import { useOrdersStore } from '../../stores';
+import { useOrdersStore, useAuthStore } from '../../stores';
 
 const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { createOrder, loading } = useOrdersStore();
+  const { user, isAuthenticated, getUser } = useAuthStore();
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      getUser();
+    }
+  }, [isAuthenticated, user, getUser]);
 
   const checkoutData = location.state;
 
@@ -48,12 +55,13 @@ const Checkout = () => {
       }));
 
       const orderData = {
-        buyer_email: buyerEmail,
         detail: details
       };
       
-      if (buyerId) {
-        orderData.buyer_id = buyerId;
+      if (isAuthenticated && user) {
+        orderData.buyer_id = user.id;
+      } else {
+        orderData.buyer_email = buyerEmail;
       }
 
       const response = await createOrder(orderData);
@@ -67,7 +75,7 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate(-1)}
@@ -81,10 +89,11 @@ const Checkout = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Event & Ticket Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Event Info */}
-            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold mb-4">Event Details</h2>
+          <div className="lg:col-span-2">
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 space-y-6">
+              {/* Event Info */}
+              <div>
+                <h2 className="text-xl font-bold mb-4">Event Details</h2>
               <div className="flex gap-4">
                 <img
                   src={event.banner}
@@ -109,41 +118,63 @@ const Checkout = () => {
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
 
-            {/* Ticket Recipients */}
-            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold mb-4">Ticket Recipients</h2>
-              <div className="space-y-3">
-                {recipients.map((recipient, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                    <Mail className="w-4 h-4 text-orange-400" />
-                    <span className="flex-1">{recipient.email}</span>
-                    {recipient.isMe && (
-                      <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full">
-                        You
-                      </span>
-                    )}
+              {/* User Details */}
+              {isAuthenticated && user && (
+                <div className="border-t border-white/10 pt-6">
+                  <h2 className="text-xl font-bold mb-4">Buyer Information</h2>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                      <User className="w-4 h-4 text-orange-400" />
+                      <span className="flex-1">{user.first_name} {user.last_name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                      <Mail className="w-4 h-4 text-orange-400" />
+                      <span className="flex-1">{user.email}</span>
+                    </div>
                   </div>
-                ))}
+                </div>
+              )}
+
+              {/* Ticket Recipients */}
+              <div className="border-t border-white/10 pt-6">
+                <h2 className="text-xl font-bold mb-4">Ticket Recipients</h2>
+                <div className="space-y-3">
+                  {recipients.map((recipient, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                      <Mail className="w-4 h-4 text-orange-400" />
+                      <span className="flex-1">{recipient.email}</span>
+                      {recipient.isMe && (
+                        <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full">
+                          You
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 sticky top-8">
-              <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 sticky top-24">
+              <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
               
               <div className="space-y-4 mb-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold">{ticket.name}</p>
-                    <p className="text-sm text-white/70">{recipients.length} ticket{recipients.length > 1 ? 's' : ''}</p>
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="font-bold text-lg text-white">{ticket.name}</p>
+                      <p className="text-sm text-white/70">{recipients.length} ticket{recipients.length > 1 ? 's' : ''}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-orange-400">
+                        {ticket.currency} {ticket.cost}
+                      </p>
+                    </div>
                   </div>
-                  <p className="font-bold text-orange-400">
-                    {ticket.currency} {ticket.cost}
-                  </p>
                 </div>
                 
                 <div className="border-t border-white/10 pt-4">
@@ -165,10 +196,14 @@ const Checkout = () => {
               <button
                 onClick={handlePayment}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className={`w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                  loading
+                    ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl hover:scale-105'
+                }`}
               >
                 <CreditCard className="w-5 h-5" />
-                {loading ? 'Processing...' : 'Pay Now'}
+                {loading ? 'Processing...' : 'Get Tickets'}
               </button>
 
               <p className="text-xs text-white/50 text-center mt-4">
