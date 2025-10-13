@@ -10,6 +10,8 @@ import "./services/api";
 import HomePage from "./pages/public/index";
 import Tickets from "./pages/public/Allevents";
 import EventDetailPage from "./pages/public/eventsDetails";
+import PaymentSuccess from "./pages/public/PaymentSuccess";
+import PaymentFailure from "./pages/public/PaymentFailure";
 import AdminLogin from "./pages/admin";
 import AdminDashboard from "./pages/admin/dashboard";
 import UserList from "./pages/admin/user/allusers";
@@ -36,6 +38,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="/discover" element={<Tickets />} />
           <Route path="/events/:eventId" element={<EventDetailPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/failure" element={<PaymentFailure />} />
         </Route>
 
         {/* 🔐 Admin login (standalone) */}
