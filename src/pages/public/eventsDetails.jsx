@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Clock, User, Bookmark, Share2, ChevronLeft, ArrowLeft, Play, Pause } from 'lucide-react';
 import { useEventsStore, useTicketsStore } from "../../stores";
+import TicketPurchaseModal from '../../components/ui/TicketPurchaseModal';
 
 const EventDetailPage = () => {
     const { eventId } = useParams();
@@ -17,6 +18,7 @@ const EventDetailPage = () => {
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [isSaved, setIsSaved] = useState(false);
     const [ticketError, setTicketError] = useState(null);
+    const [showPurchaseModal, setShowPurchaseModal] = useState(false);
     const [videoPlaying, setVideoPlaying] = useState({});
     
     // Refs for video elements and touch handling
@@ -615,6 +617,7 @@ const EventDetailPage = () => {
 
                                 <button
                                     disabled={!selectedTicket}
+                                    onClick={() => selectedTicket && setShowPurchaseModal(true)}
                                     className={`w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${selectedTicket
                                         ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl hover:scale-105'
                                         : 'bg-white/10 text-white/40 cursor-not-allowed'
@@ -631,6 +634,13 @@ const EventDetailPage = () => {
                     </div>
                 </div>
             </div>
+            
+            <TicketPurchaseModal
+                isOpen={showPurchaseModal}
+                onClose={() => setShowPurchaseModal(false)}
+                ticket={tickets.find(t => t.id === selectedTicket)}
+                event={event}
+            />
         </div>
     );
 };
