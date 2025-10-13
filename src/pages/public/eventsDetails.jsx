@@ -433,7 +433,7 @@ const EventDetailPage = () => {
                 isOpen={showPurchaseModal}
                 onClose={() => setShowPurchaseModal(false)}
                 ticket={tickets.find(t => t.id === selectedTicket)}
-                eventId={eventId}
+                event={event}
             />
         </div>
     );

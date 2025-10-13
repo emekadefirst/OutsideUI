@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Plus, Trash2, Mail } from 'lucide-react';
-import { useAuthStore, useOrdersStore } from '../../stores';
+import { useAuthStore } from '../../stores';
 
-const TicketPurchaseModal = ({ isOpen, onClose, ticket, eventId }) => {
+const TicketPurchaseModal = ({ isOpen, onClose, ticket, event }) => {
+  const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
-  const { createOrder, loading } = useOrdersStore();
-  const [step, setStep] = useState('initial'); // 'initial', 'others', 'email', 'success', 'error'
+  const [step, setStep] = useState('initial'); // 'initial', 'others', 'email'
   const [emails, setEmails] = useState(['']);
   const [buyerEmail, setBuyerEmail] = useState('');
   const [includeMe, setIncludeMe] = useState(true);
-  const [error, setError] = useState(null);
 
   const resetModal = () => {
     setStep('initial');
     setEmails(['']);
     setBuyerEmail('');
     setIncludeMe(true);
-    setError(null);
   };
 
   const handleClose = () => {
@@ -40,66 +39,31 @@ const TicketPurchaseModal = ({ isOpen, onClose, ticket, eventId }) => {
     setEmails(newEmails);
   };
 
-  const handleJustMe = async () => {
-    if (!isAuthenticated) {
-      setStep('email');
+  const handleJustMe = () => {
+    if (!isAuthenticated && !buyerEmail.trim()) {
       return;
     }
-    await submitOrder([]);
+    
+    const checkoutData = {
+      event,
+      ticket,
+      recipients: [{
+        email: isAuthenticated ? user?.email : buyerEmail,
+        isMe: true
+      }],
+      buyerEmail: isAuthenticated ? user?.email : buyerEmail,
+      buyerId: isAuthenticated ? user?.id : null
+    };
+    
+    navigate('/checkout', { state: checkoutData });
+    onClose();
   };
 
   const handleBuyForOthers = () => {
     setStep('others');
   };
 
-  const submitOrder = async (otherEmails = []) => {
-    try {
-      const details = [];
-      
-      // Add buyer if they want to include themselves
-      if (includeMe) {
-        const buyerEmailFormatted = isAuthenticated ? user?.email : buyerEmail;
-        if (buyerEmailFormatted) {
-          details.push({
-            email: buyerEmailFormatted,
-            ticket_id: ticket.id
-          });
-        }
-      }
 
-      // Add other recipients
-      otherEmails.forEach(email => {
-        if (email.trim()) {
-          details.push({
-            email: email.trim(),
-            ticket_id: ticket.id
-          });
-        }
-      });
-
-      const buyerEmailFormatted = isAuthenticated ? user?.email : buyerEmail;
-      const orderData = {
-        buyer_email: buyerEmailFormatted,
-        detail: details
-      };
-      
-      // Only add buyer_id if user is authenticated
-      if (isAuthenticated && user?.id) {
-        orderData.buyer_id = user.id;
-      }
-
-      const response = await createOrder(orderData);
-      if (response?.url) {
-        window.location.href = response.url;
-      } else {
-        setStep('success');
-      }
-    } catch (err) {
-      console.error('Order failed:', err);
-      setError(err.response?.data?.message || 'Failed to process order');
-      setStep('error');
-    }
-  };
 
   const handleSubmitOthers = () => {
     const validEmails = emails.filter(email => email.trim());
@@ -112,15 +76,40 @@ const TicketPurchaseModal = ({ isOpen, onClose, ticket, eventId }) => {
       return;
     }
 
-    submitOrder(validEmails);
+    const recipients = [];
+    
+    if (includeMe) {
+      recipients.push({
+        email: isAuthenticated ? user?.email : buyerEmail,
+        isMe: true
+      });
+    }
+    
+    validEmails.forEach(email => {
+      recipients.push({
+        email: email.trim(),
+        isMe: false
+      });
+    });
+    
+    const checkoutData = {
+      event,
+      ticket,
+      recipients,
+      buyerEmail: isAuthenticated ? user?.email : buyerEmail,
+      buyerId: isAuthenticated ? user?.id : null
+    };
+    
+    navigate('/checkout', { state: checkoutData });
+    onClose();
   };
 
   const handleEmailSubmit = () => {
     if (step === 'email' && buyerEmail.trim()) {
       if (emails.some(email => email.trim())) {
-        submitOrder(emails.filter(email => email.trim()));
+        handleSubmitOthers();
       } else {
-        submitOrder([]);
+        handleJustMe();
       }
     }
   };
@@ -169,7 +158,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, ticket, eventId }) => {
               <div className="space-y-3">
                 <button
                   onClick={handleJustMe}
-                  disabled={loading || (!isAuthenticated && !buyerEmail.trim())}
+                  disabled={!isAuthenticated && !buyerEmail.trim()}
                   className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-xl font-semibold transition-all disabled:opacity-50"
                 >
                   Just Me
@@ -248,10 +237,10 @@ const TicketPurchaseModal = ({ isOpen, onClose, ticket, eventId }) => {
 
               <button
                 onClick={handleSubmitOthers}
-                disabled={loading || (!includeMe && !emails.some(email => email.trim()))}
+                disabled={!includeMe && !emails.some(email => email.trim())}
                 className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-xl font-semibold transition-all disabled:opacity-50"
               >
-                {loading ? 'Processing...' : 'Purchase Tickets'}
+                Continue to Checkout
               </button>
             </div>
           )}
@@ -283,57 +272,15 @@ const TicketPurchaseModal = ({ isOpen, onClose, ticket, eventId }) => {
 
               <button
                 onClick={handleEmailSubmit}
-                disabled={loading || !buyerEmail.trim()}
+                disabled={!buyerEmail.trim()}
                 className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-xl font-semibold transition-all disabled:opacity-50"
               >
-                {loading ? 'Processing...' : 'Purchase Tickets'}
+                Continue to Checkout
               </button>
             </div>
           )}
 
-          {step === 'success' && (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-white">Order Successful!</h3>
-              <p className="text-white/70">Your tickets have been purchased successfully. Check your email for confirmation.</p>
-              <button
-                onClick={handleClose}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-xl font-semibold transition-all"
-              >
-                Done
-              </button>
-            </div>
-          )}
 
-          {step === 'error' && (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-white">Order Failed</h3>
-              <p className="text-white/70">{error}</p>
-              <div className="space-y-2">
-                <button
-                  onClick={() => setStep('initial')}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-xl font-semibold transition-all"
-                >
-                  Try Again
-                </button>
-                <button
-                  onClick={handleClose}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-semibold transition-all border border-white/10"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
